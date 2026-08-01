@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Delta Medical P.A. — Inventory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #1A2B3C; --navy-light: #243547;
+  --blue: #1B4F8A; --blue-bg: #E6F1FB; --blue-txt: #0C447C;
+  --teal: #0F6E56; --teal-bg: #E1F5EE; --teal-txt: #085041;
+  --coral: #993C1D; --coral-bg: #FAECE7; --coral-txt: #711B13;
+  --purple: #533AB7; --purple-bg: #EEEDFE; --purple-txt: #3C3489;
+  --amber: #854F0B; --amber-bg: #FAEEDA; --amber-txt: #633806;
+  --green: #3B6D11; --green-bg: #EAF3DE; --green-txt: #27500A;
+  --gray: #5F5E5A; --gray-bg: #F1EFE8; --gray-txt: #444441;
+  --red: #A32D2D; --red-bg: #FCEBEB; --red-txt: #501313;
+  --border: #E5E5E5; --surface: #F8F8F7; --text: #1A1A1A; --muted: #666662; --white: #FFFFFF;
+  --radius: 10px; --radius-sm: 6px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--surface); font-family: 'DM Sans', sans-serif; color: var(--text); }
+body { display: flex; flex-direction: column; }
+.topbar { background: var(--navy); padding: 16px 20px 14px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; }
+.topbar-left .practice { color: #8BA0B4; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 2px; }
+.topbar-left .title { color: #fff; font-size: 16px; font-weight: 600; }
+.content { flex: 1; overflow-y: auto; padding: 16px; max-width: 560px; margin: 0 auto; width: 100%; }
+.card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+.card-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 12px; }
+.role-btn { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; cursor: pointer; background: var(--white); }
+.role-btn:last-child { margin-bottom: 0; }
+.role-btn:active { background: var(--surface); }
+.role-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.role-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.role-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.role-arrow { margin-left: auto; color: var(--muted); font-size: 18px; }
+.room-btn { display: flex; align-items: center; justify-content: space-between; padding: 13px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; cursor: pointer; background: var(--white); }
+.room-btn:last-child { margin-bottom: 0; }
+.room-btn:active { background: var(--surface); }
+.room-name { font-size: 14px; font-weight: 600; }
+.room-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.badge { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+.badge-pending { background: var(--amber-bg); color: var(--amber-txt); }
+.badge-progress { background: var(--blue-bg); color: var(--blue-txt); }
+.badge-done { background: var(--green-bg); color: var(--green-txt); }
+.badge-out { background: var(--red-bg); color: var(--red-txt); }
+.badge-low { background: var(--amber-bg); color: var(--amber-txt); }
+.prog-wrap { height: 3px; background: var(--border); border-radius: 2px; margin: 10px 0 6px; }
+.prog-bar { height: 3px; background: var(--teal); border-radius: 2px; transition: width .3s; }
+.prog-label { font-size: 11px; color: var(--muted); }
+.sec-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; margin-bottom: 10px; }
+.item-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.item-row:last-child { border-bottom: none; }
+.item-label { flex: 1; font-size: 13px; line-height: 1.4; }
+.par-label { font-size: 10px; color: var(--muted); margin-top: 1px; font-family: 'DM Mono', monospace; }
+.togs { display: flex; gap: 5px; flex-shrink: 0; }
+.tog { border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius-sm); padding: 6px 10px; font-size: 12px; font-weight: 500; cursor: pointer; color: var(--muted); font-family: 'DM Sans', sans-serif; }
+.tog:active { opacity: .8; }
+.tog.ok { background: var(--green-bg); border-color: #639922; color: var(--green-txt); }
+.tog.low { background: var(--amber-bg); border-color: #BA7517; color: var(--amber-txt); }
+.tog.out { background: var(--red-bg); border-color: #E24B4A; color: var(--red-txt); }
+.btn { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; padding: 12px 16px; border-radius: var(--radius); font-size: 14px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--white); color: var(--text); font-family: 'DM Sans', sans-serif; margin-top: 8px; }
+.btn:active { opacity: .8; }
+.btn-teal { background: var(--teal); color: #fff; border-color: var(--teal); }
+.btn-blue { background: var(--blue); color: #fff; border-color: var(--blue); }
+.btn-amber { background: var(--amber); color: #fff; border-color: var(--amber); }
+.btn-pair { display: flex; gap: 8px; margin-top: 8px; }
+.btn-pair .btn { margin-top: 0; }
+.info-box { background: var(--surface); border-radius: var(--radius-sm); padding: 11px 13px; font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; border: 1px solid var(--border); }
+input[type=text], textarea { width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 14px; font-family: 'DM Sans', sans-serif; background: var(--white); color: var(--text); margin-top: 6px; outline: none; }
+input[type=text]:focus, textarea:focus { border-color: var(--navy); }
+textarea { min-height: 80px; resize: vertical; }
+.sum-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.sum-row:last-child { border-bottom: none; }
+.sum-item { font-size: 13px; }
+.sum-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.divider { height: 1px; background: var(--border); margin: 12px 0; }
+.cycle-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.cycle-row:last-child { border-bottom: none; }
+.cycle-val { font-size: 12px; color: var(--muted); }
+.cycle-val.done { color: var(--teal); font-weight: 600; }
+.email-preview { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 13px; font-size: 12px; font-family: 'DM Mono', monospace; line-height: 1.7; white-space: pre-wrap; max-height: 280px; overflow-y: auto; margin-top: 8px; color: var(--text); }
+.initials-wrap { display: flex; align-items: center; gap: 10px; }
+.initials-wrap input { max-width: 100px; text-transform: uppercase; font-weight: 600; }
+.back-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: var(--muted); cursor: pointer; padding: 0; background: none; border: none; font-family: 'DM Sans', sans-serif; margin-bottom: 14px; }
+.loc-chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-left: 6px; vertical-align: middle; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="practice">Delta Medical P.A.</div>
+    <div class="title" id="topbar-title">Weekly Inventory</div>
+  </div>
+</div>
+<div class="content" id="app"></div>
+
+<script>
+const EXAM_SECTIONS = [
+  {name:"Gloves & PPE",color:"#1B4F8A",bg:"#E6F1FB",txt:"#0C447C",items:[
+    {label:"Small gloves (non-nitrile)",par:"1 box"},
+    {label:"Medium gloves (non-nitrile)",par:"1 box"},
+  ]},
+  {name:"Liquids & surface supplies",color:"#0F6E56",bg:"#E1F5EE",txt:"#085041",items:[
+    {label:"Hand sanitizer",par:"1 bottle"},
+    {label:"Clorox wipes",par:"1 bottle"},
+    {label:"Hibiclens (CHG)",par:"1 bottle"},
+    {label:"Rubbing alcohol",par:"1 bottle"},
+    {label:"Saline solution",par:"1 bottle"},
+    {label:"Betadine solution",par:"1 bottle"},
+  ]},
+  {name:"Wound care & dressings",color:"#993C1D",bg:"#FAECE7",txt:"#711B13",items:[
+    {label:"Alcohol pads",par:">10"},
+    {label:"Betadine swabs",par:">10"},
+    {label:"Band-aids",par:">10"},
+    {label:"2x2 gauze",par:"2 pkgs"},
+    {label:"4x4 gauze",par:"2 pkgs"},
+    {label:"White tape",par:"1 roll"},
+    {label:"Cotton-tipped applicators",par:">10"},
+    {label:'"Ouch-less" adhesive pads',par:"1 box"},
+    {label:"Suture removal kit",par:"2"},
+    {label:"Staple removal kit",par:"2"},
+  ]},
+  {name:"Syringes & needles",color:"#533AB7",bg:"#EEEDFE",txt:"#3C3489",items:[
+    {label:"3 mL syringe",par:"2"},
+    {label:"5 mL syringe",par:"2"},
+    {label:"10 mL syringe",par:"2"},
+    {label:"30 mL syringe",par:"2"},
+    {label:"Needles - 18g",par:"5"},
+    {label:"Needles - 25g",par:"5"},
+  ]},
+  {name:"Miscellaneous supplies",color:"#854F0B",bg:"#FAEEDA",txt:"#633806",items:[
+    {label:"Table paper",par:"4 rolls"},
+    {label:"Ethyl chloride",par:"1 bottle"},
+    {label:"Paper ruler",par:">10"},
+    {label:"Aluminum chloride",par:"1 bottle"},
+    {label:"Drapes",par:">10"},
+    {label:"Gowns",par:">10"},
+    {label:"Skin-marking pen",par:"2"},
+    {label:"Stool cards",par:"5"},
+    {label:"Urine specimen cups",par:"3"},
+    {label:"Box of Kleenex tissues",par:"1 box"},
+    {label:"Otoscope speculae (tips)",par:">10"},
+  ]},
+  {name:"Exam table & patient area",color:"#3B6D11",bg:"#EAF3DE",txt:"#27500A",items:[
+    {label:"Fresh paper pulled over table",par:"Full length"},
+    {label:"Pillow cover / disposable cover - clean",par:"1"},
+    {label:"Blood pressure cuff",par:"—"},
+  ]},
+  {name:"Workstation & printer",color:"#5F5E5A",bg:"#F1EFE8",txt:"#444441",items:[
+    {label:"Printer (Brother) - paper loaded",par:"Check"},
+    {label:"3 black pens in pen holder",par:"3"},
+  ]},
+  {name:"Waste & safety",color:"#A32D2D",bg:"#FCEBEB",txt:"#501313",items:[
+    {label:"Regular trash - new liner in place",par:"—"},
+    {label:"Sharps container - under 3/4 full",par:"Check"},
+  ]},
+];
+
+const LOCATIONS = [
+  {id:"room1",name:"Room 1",short:"Room 1",color:"#1B4F8A",bg:"#E6F1FB",sections:EXAM_SECTIONS},
+  {id:"room2",name:"Room 2",short:"Room 2",color:"#1B4F8A",bg:"#E6F1FB",sections:EXAM_SECTIONS},
+  {id:"room3",name:"Room 3",short:"Room 3",color:"#1B4F8A",bg:"#E6F1FB",sections:EXAM_SECTIONS},
+  {id:"room4",name:"Room 4",short:"Room 4",color:"#1B4F8A",bg:"#E6F1FB",sections:EXAM_SECTIONS},
+  {
+    id:"lab",name:"Lab",short:"Lab",color:"#0F5E3A",bg:"#D6F5E8",
+    sections:[
+      {name:"Lab supplies",color:"#0F5E3A",bg:"#D6F5E8",txt:"#074D2E",items:[
+        {label:"22g BD Vacutainer Needle",par:"48/box"},
+        {label:"BD Vacutainer Holders",par:"48/pkg"},
+        {label:"CPL Specimen Bags",par:"200"},
+        {label:"DYMO Labels (550)",par:"1 roll"},
+        {label:"Thermo Scientific Nunc 50mL Conic",par:"Check"},
+        {label:"SurePath Cytology (Blue Lid) w/Broom",par:"25/flat"},
+        {label:"Urine C&S (gray tube with collection straw)",par:"20"},
+        {label:"Serum Transport Tube + Lids",par:"50"},
+        {label:"OC Auto Fit Test Kits",par:"25"},
+        {label:"Sterile Urine Cups",par:"100"},
+      ]},
+      {name:"Waste & safety",color:"#A32D2D",bg:"#FCEBEB",txt:"#501313",items:[
+        {label:"Regular trash - new liner in place",par:"—"},
+        {label:"Sharps container - under 3/4 full",par:"Check"},
+      ]},
+    ]
+  },
+  {
+    id:"ultrasound",name:"Ultrasound Room",short:"Ultrasound",color:"#533AB7",bg:"#EEEDFE",
+    sections:[
+      {name:"Ultrasound supplies",color:"#533AB7",bg:"#EEEDFE",txt:"#3C3489",items:[
+        {label:"Probe covers",par:"Check"},
+        {label:"Medium gloves",par:"Check"},
+        {label:"Sani wipes",par:"Check"},
+        {label:"Gowns",par:"Check"},
+        {label:"Table paper",par:"Check"},
+        {label:"Ultrasound gel",par:"Check"},
+        {label:"Paper towels",par:"Check"},
+      ]},
+      {name:"Waste & safety",color:"#A32D2D",bg:"#FCEBEB",txt:"#501313",items:[
+        {label:"Regular trash - new liner in place",par:"—"},
+        {label:"Sharps container - under 3/4 full",par:"Check"},
+      ]},
+    ]
+  },
+];
+
+const KEY = "delta_inv_v5";
+const urlRoom = new URLSearchParams(window.location.search).get("room");
+
+function locTotal(li){ return LOCATIONS[li].sections.reduce((a,s)=>a+s.items.length,0); }
+function load(){ try{ const r=localStorage.getItem(KEY); return r?JSON.parse(r):null; }catch(e){return null;} }
+function save(s){ try{ localStorage.setItem(KEY,JSON.stringify(s)); }catch(e){} }
+function fresh(){
+  const locs={};
+  LOCATIONS.forEach((_,li)=>{ locs[li]={submitted:false,submittedAt:null,maInitials:"",items:{}}; });
+  return {cycleDate:new Date().toISOString(),locs,lkSubmitted:false,lkAt:null,lkExtras:"",saApproved:false,saAt:null,saNotes:"",paulSent:false};
+}
+
+let ST = load()||fresh();
+let VIEW = {screen:"home",loc:null};
+
+if(urlRoom){
+  const ri=parseInt(urlRoom)-1;
+  if(ri>=0 && ri<=5){ VIEW={screen:"loc",loc:ri}; }
+}
+
+function persist(){ save(ST); }
+const app=document.getElementById("app");
+function setTitle(t){ document.getElementById("topbar-title").textContent=t; }
+function render(){ app.innerHTML=""; screens[VIEW.screen](); }
+
+function lp(li){ const d=Object.keys(ST.locs[li].items).length; const t=locTotal(li); return {done:d,total:t,pct:t?Math.round(d/t*100):0}; }
+function allDone(){ return LOCATIONS.every((_,li)=>ST.locs[li].submitted); }
+function fmt(iso){ if(!iso)return"—"; const d=new Date(iso); return d.toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}); }
+
+function badge(li){
+  const ld=ST.locs[li]; const p=lp(li);
+  if(ld.submitted) return`<span class="badge badge-done">✓ Done</span>`;
+  if(p.done===0) return`<span class="badge badge-pending">Not started</span>`;
+  return`<span class="badge badge-progress">${p.pct}%</span>`;
+}
+
+function missingItems(){
+  const list=[];
+  LOCATIONS.forEach((loc,li)=>{
+    Object.entries(ST.locs[li].items).forEach(([key,val])=>{
+      if(val==="out"||val==="low"){
+        const [si,ii]=key.split("-").map(Number);
+        list.push({loc:loc.name,li,label:loc.sections[si].items[ii].label,par:loc.sections[si].items[ii].par,status:val});
+      }
+    });
+  });
+  return list;
+}
+
+function buildReqText(){
+  const date=new Date().toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  const missing=missingItems();
+  let t=`DELTA MEDICAL P.A.\nWeekly Supply Requisition\n${date}\n${"─".repeat(42)}\n\n`;
+  if(missing.length===0){ t+=`All locations fully stocked. No items to order.\n\n`; }
+  else{
+    t+=`ITEMS TO ORDER:\n\n`;
+    LOCATIONS.forEach((loc,li)=>{
+      const items=missing.filter(m=>m.loc===loc.name);
+      if(items.length){ t+=`${loc.name}:\n`; items.forEach(m=>{ t+=`  • ${m.label} (PAR: ${m.par}) — ${m.status==="out"?"OUT OF STOCK":"LOW"}\n`; }); t+="\n"; }
+    });
+  }
+  if(ST.lkExtras&&ST.lkExtras.trim()){ t+=`ADDITIONAL SUPPLIES (Lakersha):\n${ST.lkExtras.trim()}\n\n`; }
+  t+=`${"─".repeat(42)}\nSUBMITTED BY:\n`;
+  LOCATIONS.forEach((loc,li)=>{ t+=`  ${loc.name}: ${ST.locs[li].maInitials||"—"} at ${fmt(ST.locs[li].submittedAt)}\n`; });
+  t+=`  Lakersha review: ${fmt(ST.lkAt)}\n  Approved: ${fmt(ST.saAt)}\n`;
+  if(ST.saNotes&&ST.saNotes.trim()){ t+=`\nNOTES:\n${ST.saNotes.trim()}\n`; }
+  return t;
+}
+
+function buildEmailBody(){
+  const date=new Date().toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  const missing=missingItems();
+  let b=`Hi Paul,\n\nHere is this week's supply requisition.\n\nDate: ${date}\n\n`;
+  if(missing.length===0){ b+=`All locations were fully stocked this week — no items to order.\n\n`; }
+  else{
+    b+=`ITEMS TO ORDER:\n\n`;
+    LOCATIONS.forEach((loc,li)=>{
+      const items=missing.filter(m=>m.loc===loc.name);
+      if(items.length){ b+=`${loc.name}:\n`; items.forEach(m=>{ b+=`  • ${m.label} (PAR: ${m.par}) — ${m.status==="out"?"OUT OF STOCK":"LOW"}\n`; }); b+="\n"; }
+    });
+  }
+  if(ST.lkExtras&&ST.lkExtras.trim()){ b+=`ADDITIONAL SUPPLIES NEEDED:\n${ST.lkExtras.trim()}\n\n`; }
+  if(ST.saNotes&&ST.saNotes.trim()){ b+=`CLINICAL NOTES:\n${ST.saNotes.trim()}\n\n`; }
+  b+=`Approved by: Sarah Mitchell NP / Dr. Ekadi\n${fmt(ST.saAt)}\n\nThank you,\nDelta Medical P.A.`;
+  return b;
+}
+
+function openEmail(){
+  const sub=encodeURIComponent("Weekly Supply Requisition — Delta Medical P.A. — "+new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}));
+  const body=encodeURIComponent(buildEmailBody());
+  window.location.href=`mailto:pekadi@delta-medical.com?subject=${sub}&body=${body}`;
+  ST.paulSent=true; persist(); render();
+}
+
+function savePDF(){
+  const txt=buildReqText();
+  const blob=new Blob([txt],{type:"text/plain"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url; a.download="DeltaMedical_Requisition_"+new Date().toISOString().slice(0,10)+".txt";
+  a.click(); URL.revokeObjectURL(url);
+}
+
+const screens = {
+
+home(){
+  setTitle("Weekly Inventory");
+  const h=document.createElement("div");
+  h.innerHTML=`
+    <div class="card">
+      <div class="card-title">Select your role</div>
+      <div class="role-btn" onclick="go('ma')">
+        <div class="role-icon" style="background:#E6F1FB">🩺</div>
+        <div><div class="role-name">Medical Assistant</div><div class="role-desc">Stock all locations</div></div>
+        <span class="role-arrow">›</span>
+      </div>
+      <div class="role-btn" onclick="go('lakersha')">
+        <div class="role-icon" style="background:#FAEEDA">📋</div>
+        <div><div class="role-name">Lakersha — Lead MA</div><div class="role-desc">Review & add supplies</div></div>
+        <span class="role-arrow">›</span>
+      </div>
+      <div class="role-btn" onclick="go('sarah')">
+        <div class="role-icon" style="background:#E1F5EE">✅</div>
+        <div><div class="role-name">Sarah / Dr. Ekadi</div><div class="role-desc">Final approval & send to Paul</div></div>
+        <span class="role-arrow">›</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">This week's status</div>
+      ${LOCATIONS.map((loc,li)=>`
+        <div class="cycle-row"><span>${loc.name}</span>${badge(li)}</div>`).join("")}
+      <div class="divider"></div>
+      <div class="cycle-row"><span>Lakersha review</span><span class="cycle-val ${ST.lkSubmitted?"done":""}">${ST.lkSubmitted?"✓ "+fmt(ST.lkAt):"Pending"}</span></div>
+      <div class="cycle-row"><span>Approval</span><span class="cycle-val ${ST.saApproved?"done":""}">${ST.saApproved?"✓ "+fmt(ST.saAt):"Pending"}</span></div>
+      <div class="cycle-row"><span>Sent to Paul</span><span class="cycle-val ${ST.paulSent?"done":""}">${ST.paulSent?"✓ Sent":"Pending"}</span></div>
+    </div>
+    <button class="btn" onclick="resetCycle()" style="color:var(--muted);font-size:13px">↺ Start new weekly cycle</button>`;
+  app.appendChild(h);
+},
+
+ma(){
+  setTitle("Stocking Checklist");
+  const h=document.createElement("div");
+  h.innerHTML=`
+    <button class="back-btn" onclick="go('home')">‹ Back</button>
+    <div class="card">
+      <div class="card-title">Select location to stock</div>
+      ${LOCATIONS.map((loc,li)=>{
+        const p=lp(li); const ld=ST.locs[li];
+        return`<div class="room-btn" onclick="openLoc(${li})">
+          <div>
+            <div class="room-name">${loc.name} <span class="loc-chip" style="background:${loc.bg};color:${loc.color}">${loc.short}</span></div>
+            <div class="room-meta">${ld.submitted?"Submitted "+fmt(ld.submittedAt)+" · "+ld.maInitials:p.done===0?"Not started":p.done+"/"+p.total+" items marked"}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">${badge(li)}<span style="color:var(--muted);font-size:18px">›</span></div>
+        </div>`;
+      }).join("")}
+    </div>`;
+  app.appendChild(h);
+},
+
+loc(){
+  const li=VIEW.loc; const loc=LOCATIONS[li]; const ld=ST.locs[li]; const p=lp(li);
+  setTitle(loc.name);
+  if(ld.submitted){
+    const missing=[];
+    Object.entries(ld.items).forEach(([key,val])=>{
+      if(val==="out"||val==="low"){ const [si,ii]=key.split("-").map(Number); missing.push({label:loc.sections[si].items[ii].label,par:loc.sections[si].items[ii].par,status:val}); }
+    });
+    const h=document.createElement("div");
+    h.innerHTML=`
+      <button class="back-btn" onclick="go('ma')">‹ Back to locations</button>
+      <div class="card">
+        <div class="info-box" style="color:var(--teal-txt);background:var(--teal-bg);border-color:#9FE1CB">✓ Submitted ${fmt(ld.submittedAt)} by ${ld.maInitials}</div>
+        <div class="card-title">${missing.length===0?"All items stocked":"Items flagged"}</div>
+        ${missing.length===0?`<p style="font-size:13px;color:var(--muted)">No issues reported.</p>`
+        :missing.map(m=>`<div class="sum-row">
+          <div><div class="sum-item">${m.label}</div><div class="sum-meta">PAR: ${m.par}</div></div>
+          <span class="badge ${m.status==="out"?"badge-out":"badge-low"}">${m.status==="out"?"Out":"Low"}</span>
+        </div>`).join("")}
+      </div>
+      <button class="btn" onclick="go('ma')">‹ Back to locations</button>`;
+    app.appendChild(h); return;
+  }
+  const h=document.createElement("div");
+  let html=`
+    <button class="back-btn" onclick="go('ma')">‹ Back to locations</button>
+    <div class="card">
+      <div class="card-title">MA / Staff initials</div>
+      <div class="initials-wrap"><input type="text" id="initials" value="${ld.maInitials||""}" placeholder="e.g. LK" maxlength="4" oninput="saveInitials(this.value)"></div>
+    </div>
+    <div class="card" style="padding:12px 16px 6px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span class="prog-label" id="prog-lbl">${p.done}/${p.total} items marked</span>
+        <span class="prog-label">${p.pct}%</span>
+      </div>
+      <div class="prog-wrap"><div class="prog-bar" id="prog-bar" style="width:${p.pct}%"></div></div>
+    </div>`;
+  loc.sections.forEach((sec,si)=>{
+    html+=`<div class="card"><div><span class="sec-tag" style="background:${sec.bg};color:${sec.txt}">${sec.name}</span></div>`;
+    sec.items.forEach((item,ii)=>{
+      const key=`${si}-${ii}`; const val=ld.items[key]||"";
+      html+=`<div class="item-row">
+        <div style="flex:1"><div class="item-label">${item.label}</div><div class="par-label">PAR: ${item.par}</div></div>
+        <div class="togs">
+          <button class="tog${val==="ok"?" ok":""}" onclick="setIt(${li},'${key}','ok')">✓</button>
+          <button class="tog${val==="low"?" low":""}" onclick="setIt(${li},'${key}','low')">Low</button>
+          <button class="tog${val==="out"?" out":""}" onclick="setIt(${li},'${key}','out')">Out</button>
+        </div>
+      </div>`;
+    });
+    html+=`</div>`;
+  });
+  html+=`<button class="btn btn-teal" onclick="submitLoc(${li})">✓ Submit ${loc.name}</button>
+    <button class="btn" onclick="go('ma')" style="margin-top:6px">‹ Back</button>`;
+  h.innerHTML=html; app.appendChild(h);
+},
+
+lakersha(){
+  setTitle("Lakersha — Review");
+  if(!allDone()){
+    const pending=LOCATIONS.filter((_,li)=>!ST.locs[li].submitted).map(l=>l.name);
+    const h=document.createElement("div");
+    h.innerHTML=`
+      <button class="back-btn" onclick="go('home')">‹ Back</button>
+      <div class="card"><div class="info-box">⏳ Waiting for all locations to be submitted.<br><br>Still pending: <strong>${pending.join(", ")}</strong></div></div>`;
+    app.appendChild(h); return;
+  }
+  if(ST.lkSubmitted){
+    const h=document.createElement("div");
+    h.innerHTML=`
+      <button class="back-btn" onclick="go('home')">‹ Back</button>
+      <div class="card">
+        <div class="info-box" style="color:var(--teal-txt);background:var(--teal-bg);border-color:#9FE1CB">✓ Submitted to Sarah at ${fmt(ST.lkAt)}</div>
+        ${ST.lkExtras?`<div class="card-title" style="margin-top:10px">Additional supplies noted</div><p style="font-size:13px;line-height:1.6">${ST.lkExtras}</p>`:""}
+      </div>`;
+    app.appendChild(h); return;
+  }
+  const missing=missingItems();
+  const h=document.createElement("div");
+  h.innerHTML=`
+    <button class="back-btn" onclick="go('home')">‹ Back</button>
+    <div class="card">
+      <div class="card-title">Items flagged</div>
+      ${missing.length===0
+        ?`<div class="info-box">No items flagged — all locations fully stocked.</div>`
+        :missing.map(m=>`<div class="sum-row">
+            <div><div class="sum-item">${m.label}</div><div class="sum-meta">${m.loc} · PAR: ${m.par}</div></div>
+            <span class="badge ${m.status==="out"?"badge-out":"badge-low"}">${m.status==="out"?"Out":"Low"}</span>
+          </div>`).join("")}
+    </div>
+    <div class="card">
+      <div class="card-title">Add extra supplies</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:4px">Anything not on the standard list</p>
+      <textarea id="lk-extras" placeholder="e.g. Extra large gloves for Room 2...">${ST.lkExtras||""}</textarea>
+    </div>
+    <button class="btn btn-teal" onclick="submitLK()">→ Submit to Sarah for approval</button>
+    <button class="btn" onclick="go('home')" style="margin-top:6px">‹ Back</button>`;
+  app.appendChild(h);
+},
+
+sarah(){
+  setTitle("Approval");
+  if(!ST.lkSubmitted){
+    const h=document.createElement("div");
+    h.innerHTML=`
+      <button class="back-btn" onclick="go('home')">‹ Back</button>
+      <div class="card"><div class="info-box">⏳ Awaiting Lakersha's review first.</div></div>`;
+    app.appendChild(h); return;
+  }
+  if(ST.saApproved){
+    const h=document.createElement("div");
+    h.innerHTML=`
+      <button class="back-btn" onclick="go('home')">‹ Back</button>
+      <div class="card">
+        <div class="info-box" style="color:var(--teal-txt);background:var(--teal-bg);border-color:#9FE1CB;margin-bottom:14px">✓ Approved ${fmt(ST.saAt)}</div>
+        <div class="card-title">Send to Paul</div>
+        <div class="btn-pair">
+          <button class="btn btn-blue" onclick="openEmail()">✉ Open in Mail</button>
+          <button class="btn btn-amber" onclick="savePDF()">↓ Save PDF</button>
+        </div>
+        ${ST.paulSent?`<p style="font-size:12px;color:var(--teal);text-align:center;margin-top:8px">✓ Email opened</p>`:""}
+      </div>
+      <div class="card">
+        <div class="card-title">Requisition preview</div>
+        <div class="email-preview" id="preview"></div>
+      </div>
+      <button class="btn" onclick="go('home')" style="margin-top:6px">‹ Home</button>`;
+    app.appendChild(h);
+    document.getElementById("preview").textContent=buildReqText();
+    return;
+  }
+  const missing=missingItems();
+  const timestamps=LOCATIONS.map((loc,li)=>`${loc.name}: ${ST.locs[li].maInitials||"—"} at ${fmt(ST.locs[li].submittedAt)}`).join("<br>");
+  const h=document.createElement("div");
+  h.innerHTML=`
+    <button class="back-btn" onclick="go('home')">‹ Back</button>
+    <div class="card">
+      <div class="card-title">Submission timestamps</div>
+      <div class="info-box">${timestamps}</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Items to requisition</div>
+      ${missing.length===0
+        ?`<div class="info-box">No items flagged this week.</div>`
+        :missing.map(m=>`<div class="sum-row">
+            <div><div class="sum-item">${m.label}</div><div class="sum-meta">${m.loc} · PAR: ${m.par}</div></div>
+            <span class="badge ${m.status==="out"?"badge-out":"badge-low"}">${m.status==="out"?"Out":"Low"}</span>
+          </div>`).join("")}
+      ${ST.lkExtras?`<div class="divider"></div><div class="card-title">Lakersha's additions</div><p style="font-size:13px;line-height:1.6;padding:4px 0">${ST.lkExtras}</p>`:""}
+    </div>
+    <div class="card">
+      <div class="card-title">Clinical notes (optional)</div>
+      <textarea id="sa-notes" placeholder="Add any notes for Paul…"></textarea>
+    </div>
+    <button class="btn btn-teal" onclick="submitSA()">✓ Approve requisition</button>
+    <button class="btn" onclick="go('home')" style="margin-top:6px">‹ Back</button>`;
+  app.appendChild(h);
+}
+
+};
+
+function go(screen){ VIEW.screen=screen; render(); }
+function openLoc(li){ VIEW.loc=li; VIEW.screen="loc"; render(); }
+function saveInitials(v){ ST.locs[VIEW.loc].maInitials=v.toUpperCase().slice(0,4); persist(); }
+
+function setIt(li,key,val){
+  ST.locs[li].items[key]=val; persist();
+  const p=lp(li);
+  const lbl=document.getElementById("prog-lbl"); const bar=document.getElementById("prog-bar");
+  if(lbl) lbl.textContent=p.done+"/"+p.total+" items marked";
+  if(bar) bar.style.width=p.pct+"%";
+  document.querySelectorAll(`[onclick*="'${key}'"]`).forEach(b=>{ b.className="tog"; });
+  const active=document.querySelector(`[onclick="setIt(${li},'${key}','${val}')"]`);
+  if(active) active.className="tog "+val;
+}
+
+function submitLoc(li){
+  const ld=ST.locs[li];
+  if(!ld.maInitials||!ld.maInitials.trim()){ alert("Please enter your initials first."); return; }
+  if(lp(li).done<locTotal(li)){ alert("Please mark every item as OK, Low, or Out before submitting."); return; }
+  ld.submitted=true; ld.submittedAt=new Date().toISOString(); persist();
+  VIEW.screen="ma"; render();
+}
+
+function submitLK(){
+  const el=document.getElementById("lk-extras");
+  ST.lkExtras=el?el.value.trim():""; ST.lkSubmitted=true; ST.lkAt=new Date().toISOString(); persist(); render();
+}
+
+function submitSA(){
+  const el=document.getElementById("sa-notes");
+  ST.saNotes=el?el.value.trim():""; ST.saApproved=true; ST.saAt=new Date().toISOString(); persist(); render();
+}
+
+function resetCycle(){
+  if(confirm("Start a fresh weekly cycle? All current data will be cleared.")){ ST=fresh(); persist(); VIEW={screen:"home",loc:null}; render(); }
+}
+
+render();
+</script>
+</body>
+</html>
